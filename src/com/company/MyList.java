@@ -3,7 +3,7 @@ package com.company;
 /**
  * Created by akonopko on 09.02.15.
  */
-public interface MyList {
+public interface MyList extends MyCollection {
 
     public void add(Object o);
 
@@ -24,5 +24,7 @@ public interface MyList {
     public int indexOf(Object o);
 
     public void insert(int i, Object o);
+
+    public MyIterator iterator();
 
 }

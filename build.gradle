@@ -1,0 +1,29 @@
+apply plugin: 'application'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'java'
+apply plugin: 'maven'
+
+mainClassName = 'com.collective.celos.ci.CelosCi'
+group = 'com.collective'
+version = '0.1'
+sourceCompatibility = 1.7
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "http://repo1.maven.org/maven2" }
+    maven { url "https://repository.cloudera.com/artifactory/cloudera-repos" }
+}
+
+dependencies {
+
+    testCompile("junit:junit:4.8.2")
+    testCompile("org.powermock:powermock-module-junit4:1.5.5") {
+       exclude module: 'junit'
+    }
+    testCompile("org.powermock:powermock-api-mockito:1.5.5") {
+       exclude module: 'junit'
+    }
+    testCompile("org.mockito:mockito-all:1.9.5")
+}

@@ -5,6 +5,34 @@ public class MyArrayList implements MyList {
     private int internalSize = 0;
     private Object[] elements = new Object[16];
 
+    private class MyArrayListIterator implements MyIterator {
+
+        @Override
+        public boolean hasNext() {
+            return false;
+        }
+
+        @Override
+        public void remove() {
+
+        }
+
+        @Override
+        public Object next() {
+            return null;
+        }
+    }
+
+
+    public MyIterator iterator() {
+        return new MyArrayListIterator();
+    }
+
+    @Override
+    public boolean remove(Object o) {
+        return false;
+    }
+
 
     public void add(Object o) {
 

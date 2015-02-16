@@ -2,6 +2,70 @@ package com.company;
 
 public class MyLinkedList implements MyList {
 
+    private class MyLinkedNode {
+
+        private MyLinkedNode next;
+        private Object value;
+
+        public MyLinkedNode() {
+            next = null;
+            value = null;
+        }
+
+        public MyLinkedNode(MyLinkedNode next, Object value) {
+            this.next = next;
+            this.value = value;
+        }
+
+        public MyLinkedNode getNext() {
+            return next;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        public void setValue(Object value) {
+            this.value = value;
+        }
+
+        public void setNext(MyLinkedNode next) {
+            this.next = next;
+        }
+    }
+
+
+    private class MyLinkedListIterator implements MyIterator {
+
+        MyLinkedNode currentPlace = first;
+
+        @Override
+        public boolean hasNext() {
+            return currentPlace.next != null;
+        }
+
+        @Override
+        public void remove() {
+
+        }
+
+        @Override
+        public Object next() {
+            return null;
+        }
+    }
+
+
+    public MyIterator iterator() {
+        return new MyLinkedListIterator();
+    }
+
+    @Override
+    public boolean remove(Object o) {
+        return false;
+    }
+
+
     private MyLinkedNode first;
 
     private MyLinkedNode getNode(int index) {
