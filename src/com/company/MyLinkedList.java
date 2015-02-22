@@ -1,5 +1,7 @@
 package com.company;
 
+import java.util.concurrent.RejectedExecutionException;
+
 public class MyLinkedList implements MyList {
 
     private class MyLinkedNode {
@@ -37,21 +39,70 @@ public class MyLinkedList implements MyList {
 
     private class MyLinkedListIterator implements MyIterator {
 
-        MyLinkedNode currentPlace = first;
+        MyLinkedNode currentPlace = new MyLinkedNode(first, null);
+        int position = -1;
+        int changes = nOfChanges;
+
+        private void stopIfChanged() {
+            if (changes != nOfChanges) {
+                throw new RejectedExecutionException();
+            }
+        }
+
+        private void stepForward() {
+            if (currentPlace.next == null) {
+                throw new IndexOutOfBoundsException();
+            }
+            currentPlace = currentPlace.getNext();
+            position++;
+        }
 
         @Override
         public boolean hasNext() {
-            return currentPlace.next != null;
+            stopIfChanged();
+            return currentPlace.getNext() != null;
         }
 
         @Override
         public void remove() {
-
+            stopIfChanged();
+            MyLinkedList.this.remove(position);
+            changes++;
         }
 
         @Override
         public Object next() {
-            return null;
+            stopIfChanged();
+            stepForward();
+
+            return currentPlace.getValue();
+        }
+
+        public int nextIndex() {
+            if (currentPlace.next == null) {
+                throw new IndexOutOfBoundsException();
+            }
+            return position + 1;
+        }
+
+
+        public void set(Object o) {
+            stopIfChanged();
+            stepForward();
+            currentPlace.setValue(o);
+
+            // тут не уверен на 100%;
+            // В общем случае на структуру не влияет вроде бы
+            nOfChanges++;
+            changes++;
+        }
+
+        public void insert(Object o) {
+            stopIfChanged();
+            MyLinkedNode newNode = new MyLinkedNode(currentPlace.getNext(), 0);
+            currentPlace.setNext(newNode);
+            nOfChanges++;
+            changes++;
         }
     }
 
@@ -67,13 +118,14 @@ public class MyLinkedList implements MyList {
 
 
     private MyLinkedNode first;
+    private int nOfChanges = 0;
 
     private MyLinkedNode getNode(int index) {
         MyLinkedNode search = first;
 
         for (int i = 0; i < index; i++) {
             if (search == null) {
-                throw new RuntimeException();
+                throw new IndexOutOfBoundsException();
             }
             search = search.getNext();
         }
@@ -95,7 +147,7 @@ public class MyLinkedList implements MyList {
             }
             search.setNext(new MyLinkedNode(null, o));
         }
-
+        nOfChanges++;
     }
 
     @Override
@@ -111,7 +163,7 @@ public class MyLinkedList implements MyList {
         Object removedObj;
 
         if (isEmpty()) {
-            throw new RuntimeException();
+            throw new IndexOutOfBoundsException();
         }
 
         if (index == 0) {
@@ -126,12 +178,14 @@ public class MyLinkedList implements MyList {
         //previousNode.getNext().getNext() = getNode(index+1), но, по идее, быстрее
         previousNode.setNext(previousNode.getNext().getNext());
 
+        nOfChanges++;
         return removedObj;
     }
 
     @Override
     public void clear() {
-        first = new MyLinkedNode();
+        first = null;
+        nOfChanges++;
     }
 
     @Override
@@ -161,6 +215,7 @@ public class MyLinkedList implements MyList {
     public void put(int i, Object o) {
         MyLinkedNode node = getNode(i);
         node.setValue(o);
+        nOfChanges++;
     }
 
     @Override
@@ -183,5 +238,6 @@ public class MyLinkedList implements MyList {
         MyLinkedNode previousNode = getNode(i);
         MyLinkedNode newNode = new MyLinkedNode(previousNode.getNext(), o);
         previousNode.setNext(newNode);
+        nOfChanges++;
     }
 }
