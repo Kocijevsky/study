@@ -108,6 +108,7 @@ public class MyLinkedList implements MyList {
 
         public int nextIndex() {
             throwModificationException();
+            
             if (hasNext()) {
                 return (currentPositionIndex + 1);
             } else {
