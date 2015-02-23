@@ -3,6 +3,10 @@ package com.company;
 
 public interface MyListIterator extends MyIterator {
 
+    boolean hasNext();
+
+    Object next();
+
     boolean hasPrevious();
 
     Object previous();
