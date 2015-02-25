@@ -55,7 +55,7 @@ public class MyLinkedList implements MyList {
         // Звали вперед или назад?
         boolean siblingCalled = false;
 
-        int position = -1;
+        int nextPosition = 0;
         int localChanges = listChanges;
 
         private void stopIfChanged() {
@@ -75,7 +75,7 @@ public class MyLinkedList implements MyList {
             currentPlace.setNext(prev);
             currentPlace.setPrev(next);
 
-            position++;
+            nextPosition++;
         }
 
         @Override
@@ -116,7 +116,7 @@ public class MyLinkedList implements MyList {
 
             currentPlace = new MyLinkedNode(null, prev, next);
             siblingCalled = false;
-            position--;
+            nextPosition--;
 
             listChanges++;
             localChanges++;
@@ -130,7 +130,7 @@ public class MyLinkedList implements MyList {
             if (currentPlace.next == null) {
                 throw new IndexOutOfBoundsException();
             }
-            return position + 1;
+            return nextPosition + 1;
         }
 
 
