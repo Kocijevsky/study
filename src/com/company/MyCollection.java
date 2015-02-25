@@ -15,6 +15,4 @@ public interface MyCollection {
 
     MyIterator iterator();
 
-    boolean remove(Object o);
-
 }
