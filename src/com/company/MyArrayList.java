@@ -28,11 +28,6 @@ public class MyArrayList implements MyList {
         return new MyArrayListIterator();
     }
 
-    @Override
-    public boolean remove(Object o) {
-        return false;
-    }
-
 
     public void add(Object o) {
 

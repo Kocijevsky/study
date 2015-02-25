@@ -1,5 +1,6 @@
 package com.company;
 
+import java.util.ConcurrentModificationException;
 import java.util.concurrent.RejectedExecutionException;
 
 public class MyLinkedList implements MyList {
@@ -48,12 +49,13 @@ public class MyLinkedList implements MyList {
     }
 
 
-    private class MyLinkedListIterator implements MyIterator {
+    private class MyLinkedListIterator implements MyListIterator {
 
         MyLinkedNode currentPlace = new MyLinkedNode(null, null, first);
 
         // Звали вперед или назад?
         boolean siblingCalled = false;
+        boolean isLastCalledNext;
 
         int nextPosition = 0;
         int localChanges = listChanges;
@@ -65,18 +67,64 @@ public class MyLinkedList implements MyList {
         }
 
         private void stepForward() {
+
             if (currentPlace.getNext() == null) {
                 throw new IndexOutOfBoundsException();
             }
 
             MyLinkedNode next = currentPlace.getNext();
-            MyLinkedNode prev = currentPlace.getPrev();
 
-            currentPlace.setNext(prev);
+            currentPlace.setNext(next.getNext());
             currentPlace.setPrev(next);
 
             nextPosition++;
         }
+
+        private void stepBack() {
+
+            if (currentPlace.getPrev() == null) {
+                throw new IndexOutOfBoundsException();
+            }
+
+            MyLinkedNode prev = currentPlace.getPrev();
+
+            currentPlace.setNext(prev);
+            currentPlace.setPrev(prev.getPrev());
+
+            nextPosition--;
+        }
+
+        private Object removeNext() {
+            MyLinkedNode next = currentPlace.getNext();
+            MyLinkedNode prev = currentPlace.getPrev();
+
+            MyLinkedNode newPrev = prev.getPrev();
+
+            currentPlace.setPrev(newPrev);
+            if(newPrev!=null){
+                newPrev.setNext(next);
+            }
+            next.setPrev(newPrev);
+
+            return next.getValue();
+        }
+
+        private Object removePrev() {
+            MyLinkedNode next = currentPlace.getNext();
+            MyLinkedNode prev = currentPlace.getPrev();
+
+            MyLinkedNode newNext = next.getNext();
+
+            currentPlace.setNext(newNext);
+            if(newNext!=null){
+                newNext.setPrev(prev);
+            }
+            prev.setNext(newNext);
+
+            nextPosition--;
+            return prev.getValue();
+        }
+
 
         @Override
         public boolean hasNext() {
@@ -85,17 +133,33 @@ public class MyLinkedList implements MyList {
         }
 
         @Override
+        public boolean hasPrevious() {
+            stopIfChanged();
+            return currentPlace.getPrev() != null;
+        }
+
+        @Override
         public Object next() {
             stopIfChanged();
             stepForward();
-
+            // -  - | -  -  -
+            // переводим ссылки вперед
+            // -  -   - |-  -
+            // getPrev = старому getNext
+            //
+            // Поэтому возвращать будем значение предыдущей ноды
             siblingCalled = true;
-            return currentPlace.getValue();
+            isLastCalledNext = true;
+            return currentPlace.getPrev().getValue();
         }
 
-        public boolean hasPrev() {
+        @Override
+        public Object previous() {
             stopIfChanged();
-            return currentPlace.getPrev() != null;
+            stepBack();
+            siblingCalled = true;
+            isLastCalledNext = false;
+            return currentPlace.getNext().getValue() != null;
         }
 
 
@@ -104,19 +168,19 @@ public class MyLinkedList implements MyList {
             stopIfChanged();
 
             if (!siblingCalled) {
-                throw new IndexOutOfBoundsException();
+                throw new ConcurrentModificationException();
             }
 
-            Object removedObj = currentPlace.getValue();
-            MyLinkedNode next = currentPlace.getNext();
-            MyLinkedNode prev = currentPlace.getPrev();
+            Object removedObj;
 
-            next.setPrev(prev);
-            prev.setNext(next);
+            if (isLastCalledNext) {
+                removedObj = removeNext();
+            } else {
+                removedObj = removePrev();
+            }
 
-            currentPlace = new MyLinkedNode(null, prev, next);
+            isLastCalledNext = false;
             siblingCalled = false;
-            nextPosition--;
 
             listChanges++;
             localChanges++;
@@ -125,30 +189,72 @@ public class MyLinkedList implements MyList {
 
         }
 
-
+        @Override
         public int nextIndex() {
-            if (currentPlace.next == null) {
+            if (currentPlace.getNext() == null) {
                 throw new IndexOutOfBoundsException();
             }
-            return nextPosition + 1;
+            return nextPosition;
         }
 
+        @Override
+        public int previousIndex() {
+            if (currentPlace.getPrev() == null) {
+                throw new IndexOutOfBoundsException();
+            }
+            return nextPosition - 1;
+        }
 
+        @Override
         public void set(Object o) {
             stopIfChanged();
-            stepForward();
-            currentPlace.setValue(o);
 
+            if (!siblingCalled) {
+                throw new ConcurrentModificationException();
+            }
+
+            // Адовато с прев и некст
+            // Если вызвали next(), то бывший следующий будет доступен по .getPrev()
+            // И наоборот
+
+            // p    n
+            // _  | _   _
+            // 0    1   2
+            //
+            //
+            //     p    n
+            // _   _  | _
+            // 0   1    2
+            //
+            //
+            // Но пользователь хотел обновть следующий,
+            // Т.е. 1, который стал предыдущим после next()
+
+            if (isLastCalledNext) {
+                currentPlace.getPrev().setValue(o);
+            } else {
+                currentPlace.getNext().setValue(o);
+            }
             // тут не уверен на 100%;
             // В общем случае на структуру не влияет вроде бы
             listChanges++;
             localChanges++;
         }
 
-        public void insert(Object o) {
+        @Override
+        public void add(Object o) {
             stopIfChanged();
-            MyLinkedNode newNode = new MyLinkedNode(currentPlace.getNext(), 0);
-            currentPlace.setNext(newNode);
+            MyLinkedNode next = currentPlace.getNext();
+            MyLinkedNode prev = currentPlace.getPrev();
+
+            MyLinkedNode newNode = new MyLinkedNode(o,prev,next);
+
+            next.setPrev(newNode);
+            prev.setNext(newNode);
+
+            currentPlace.setPrev(newNode);
+
+            siblingCalled = false;
             listChanges++;
             localChanges++;
         }

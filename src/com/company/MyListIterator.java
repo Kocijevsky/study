@@ -11,7 +11,7 @@ public interface MyListIterator extends MyIterator {
 
     int previousIndex();
 
-    void remove();
+    Object remove();
 
     void set(Object e);
 
