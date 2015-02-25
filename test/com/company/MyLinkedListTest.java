@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 public class MyLinkedListTest {
 
-    Object intNumber = (Object)156;
+    Integer intNumber = 156;
     char character = 'a';
     String string = "Hello";
     int[] array = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};

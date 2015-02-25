@@ -54,7 +54,7 @@ public class MyLinkedList implements MyList {
 
         public MyLinkedListIterator(){
             changes = changesCounter;
-            virtualCurrentNode.setNext(first);
+            if (!isEmpty()) { virtualCurrentNode.setNext(first); }
             nextPositionIndex = 0;
         }
 
@@ -157,13 +157,19 @@ public class MyLinkedList implements MyList {
 
         public void add(Object e) {
             throwModificationException();
-            MyLinkedNode newNode = new MyLinkedNode(virtualCurrentNode.getNext(), e, virtualCurrentNode.getPrevious());
-            MyLinkedNode nextNode = virtualCurrentNode.getNext();
-            MyLinkedNode previousNode = virtualCurrentNode.getPrevious();
-            nextNode.setPrevious(newNode);
-            previousNode.setNext(newNode);
-            virtualCurrentNode.setNext(newNode);
-            cleanNextAndPreviousCallsAndIncrementChangesCounter();
+            if (isEmpty()) {
+                first = new MyLinkedNode(null, e, null);
+                virtualCurrentNode.setNext(first);
+                cleanNextAndPreviousCallsAndIncrementChangesCounter();
+            } else {
+                MyLinkedNode newNode = new MyLinkedNode(virtualCurrentNode.getNext(), e, virtualCurrentNode.getPrevious());
+                MyLinkedNode nextNode = virtualCurrentNode.getNext();
+                MyLinkedNode previousNode = virtualCurrentNode.getPrevious();
+                nextNode.setPrevious(newNode);
+                previousNode.setNext(newNode);
+                virtualCurrentNode.setNext(newNode);
+                cleanNextAndPreviousCallsAndIncrementChangesCounter();
+            }
         }
     }
 
