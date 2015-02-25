@@ -4,7 +4,7 @@ import java.util.ConcurrentModificationException;
 
 public class MyLinkedList implements MyList {
 
-    private class MyLinkedNode {
+    class MyLinkedNode {
 
         private MyLinkedNode next;
         private Object value;
@@ -46,16 +46,16 @@ public class MyLinkedList implements MyList {
 
     public class MyLinkedListIterator implements MyListIterator {
 
-        MyLinkedNode currentPosition;
+        MyLinkedNode virtualCurrentNode = null;
         int changes;
-        int currentPositionIndex;
+        int nextPositionIndex;
         boolean isNextCalled = false;
         boolean isPreviousCalled = false;
 
         public MyLinkedListIterator(){
             changes = changesCounter;
-            currentPosition.setNext(first);
-            currentPositionIndex = -1;
+            virtualCurrentNode.setNext(first);
+            nextPositionIndex = 0;
         }
 
         private void throwModificationException (){
@@ -64,65 +64,59 @@ public class MyLinkedList implements MyList {
             }
         }
 
-        private void cleanNextAndPreviousCallsandIncrementChangesCounter(){
+        private void cleanNextAndPreviousCallsAndIncrementChangesCounter(){
             isNextCalled = false;
             isPreviousCalled = false;
+            changes++;
             changesCounter++;
         }
 
         public boolean hasNext() {
             throwModificationException();
-            return currentPosition.next != null;
+            return virtualCurrentNode.next != null;
         }
 
         public Object next() {
             throwModificationException();
-            if (currentPosition.getNext() == null){
+            if (virtualCurrentNode.getNext() == null){
                 throw new IndexOutOfBoundsException();
             } else {
-                currentPosition = currentPosition.getNext();
-                currentPositionIndex++;
+                virtualCurrentNode.setPrevious(virtualCurrentNode.getNext());
+                virtualCurrentNode.setNext(virtualCurrentNode.getNext().getNext());
+                nextPositionIndex++;
                 isNextCalled = true;
                 isPreviousCalled = false;
-                return currentPosition;
+                return virtualCurrentNode.getPrevious();
             }
         }
 
         public boolean hasPrevious() {
             throwModificationException();
-            return currentPosition.previous != null;
+            return virtualCurrentNode.previous != null;
         }
 
         public Object previous() {
             throwModificationException();
-            if (currentPosition.getPrevious() == null){
+            if (virtualCurrentNode.getPrevious() == null){
                 throw new IndexOutOfBoundsException();
             } else {
-                currentPosition = currentPosition.getPrevious();
-                currentPositionIndex--;
+                virtualCurrentNode.setNext(virtualCurrentNode.getPrevious());
+                virtualCurrentNode.setPrevious(virtualCurrentNode.getPrevious().getPrevious());
+                nextPositionIndex--;
                 isNextCalled = false;
                 isPreviousCalled = true;
-                return currentPosition;
+                return virtualCurrentNode.getNext();
             }
         }
 
         public int nextIndex() {
             throwModificationException();
-            
-            if (hasNext()) {
-                return (currentPositionIndex + 1);
-            } else {
-                return -1;
-            }
+            return (nextPositionIndex);
         }
 
         public int previousIndex() {
             throwModificationException();
-            if (hasPrevious()) {
-                return indexOf(currentPositionIndex - 1);
-            } else {
-                return -1;
-            }
+            return (nextPositionIndex - 1);
         }
 
         public void remove() { // ??? Может, нужно next и previous считать, и ремувить сразу кучу элементов?
@@ -131,14 +125,20 @@ public class MyLinkedList implements MyList {
                 throw new IllegalStateException();
             }
             if (isNextCalled){
-                currentPosition = currentPosition.getPrevious();
-                MyLinkedList.this.remove(currentPositionIndex);
-                currentPositionIndex--;
-                cleanNextAndPreviousCallsandIncrementChangesCounter();
+                MyLinkedNode newPrevious = virtualCurrentNode.getPrevious().getPrevious();
+                MyLinkedNode newNext = virtualCurrentNode.getNext();
+                newPrevious.setNext(newNext);
+                newNext.setPrevious(newPrevious);
+                virtualCurrentNode.setPrevious(newPrevious);
+                nextPositionIndex--;
+                cleanNextAndPreviousCallsAndIncrementChangesCounter();
             } else {
-                currentPosition = currentPosition.getNext();
-                MyLinkedList.this.remove(currentPositionIndex);
-                cleanNextAndPreviousCallsandIncrementChangesCounter();
+                MyLinkedNode newPrevious = virtualCurrentNode.getPrevious();
+                MyLinkedNode newNext = virtualCurrentNode.getNext().getNext();
+                newPrevious.setNext(newNext);
+                newNext.setPrevious(newPrevious);
+                virtualCurrentNode.setNext(newNext);
+                cleanNextAndPreviousCallsAndIncrementChangesCounter();
             }
         }
 
@@ -146,17 +146,24 @@ public class MyLinkedList implements MyList {
             throwModificationException();
             if (!isNextCalled && !isPreviousCalled){
                 throw new IllegalStateException();
+            } if (isNextCalled){
+                virtualCurrentNode.getPrevious().setValue(e);
+                cleanNextAndPreviousCallsAndIncrementChangesCounter();
             } else {
-                MyLinkedList.this.put(currentPositionIndex, e);
-                cleanNextAndPreviousCallsandIncrementChangesCounter();
+                virtualCurrentNode.getNext().setValue(e);
+                cleanNextAndPreviousCallsAndIncrementChangesCounter();
             }
         }
 
         public void add(Object e) {
             throwModificationException();
-            MyLinkedList.this.insert(currentPositionIndex, e);
-            currentPositionIndex++;
-            cleanNextAndPreviousCallsandIncrementChangesCounter();
+            MyLinkedNode newNode = new MyLinkedNode(virtualCurrentNode.getNext(), e, virtualCurrentNode.getPrevious());
+            MyLinkedNode nextNode = virtualCurrentNode.getNext();
+            MyLinkedNode previousNode = virtualCurrentNode.getPrevious();
+            nextNode.setPrevious(newNode);
+            previousNode.setNext(newNode);
+            virtualCurrentNode.setNext(newNode);
+            cleanNextAndPreviousCallsAndIncrementChangesCounter();
         }
     }
 
@@ -170,11 +177,14 @@ public class MyLinkedList implements MyList {
     }
 
 
-    private MyLinkedNode first;
+    MyLinkedNode first;
     private int changesCounter = 0;
 
-    private MyLinkedNode getNode(int index) {
+    MyLinkedNode getNode(int index) {
         MyLinkedNode search = first;
+        if (search == null || index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException();
+        }
         for (int i = 0; i < index; i++) {
             if (search == null) {
                 throw new IndexOutOfBoundsException();
@@ -205,13 +215,11 @@ public class MyLinkedList implements MyList {
 
     public Object remove(int index) {
         Object removedObj;
-        if (index >= size()) {
-            throw new IndexOutOfBoundsException();
-        }
+        if (isEmpty()) { throw new IndexOutOfBoundsException(); }
         if (index == 0) {
             removedObj = first.getValue();
             first = first.getNext();
-            first.setPrevious(null);
+            if (first != null){ first.setPrevious(null); }
             changesCounter++;
             return removedObj;
         }
@@ -219,13 +227,13 @@ public class MyLinkedList implements MyList {
         MyLinkedNode nextNode = previousNode.getNext().getNext();
         removedObj = previousNode.getNext().getValue();
         previousNode.setNext(nextNode);
-        nextNode.setPrevious(previousNode);
+        if (nextNode != null) { nextNode.setPrevious(previousNode); }
         changesCounter++;
         return removedObj;
     }
 
     public void clear() {
-        first = new MyLinkedNode();
+        first = null;
         changesCounter++;
     }
 
@@ -240,7 +248,6 @@ public class MyLinkedList implements MyList {
             search = search.getNext();
             size++;
         }
-
         return size;
     }
 
@@ -249,18 +256,16 @@ public class MyLinkedList implements MyList {
     }
 
     public void put(int i, Object o) {
-        if (i >= size()){
-            throw new IndexOutOfBoundsException();
-        }
         MyLinkedNode node = getNode(i);
         node.setValue(o);
         changesCounter++;
         }
 
-    public int indexOf(Object o) {
+    public int indexOf(Object object) {
         MyLinkedNode search = first;
         for (int i = 0; search != null; i++) {
-            if (search.getValue() == o) {
+            Object searchObject = search.getValue();
+            if (searchObject == object) {
                 return i;
             }
             search = search.getNext();
@@ -272,13 +277,14 @@ public class MyLinkedList implements MyList {
         int size = size();
         if (i > size) {
             throw new IndexOutOfBoundsException();
-        }
-        if (i == 0){
-            first = new MyLinkedNode(first, o, null);
-            changesCounter++;
-        }
-        if (i == size) {
+        } if (i == size) {
             add(o);
+            return;
+        } if (i == 0){
+            MyLinkedNode nextNode = first;
+            first = new MyLinkedNode(nextNode, o, null);
+            nextNode.setPrevious(first);
+            changesCounter++;
         } else{
             MyLinkedNode previousNode = getNode(i - 1);
             MyLinkedNode nextNode = previousNode.getNext();
@@ -287,5 +293,6 @@ public class MyLinkedList implements MyList {
             nextNode.setPrevious(newNode);
             changesCounter++;
         }
+
     }
 }
