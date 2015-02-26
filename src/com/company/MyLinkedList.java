@@ -46,20 +46,21 @@ public class MyLinkedList implements MyList {
 
     public class MyLinkedListIterator implements MyListIterator {
 
-        MyLinkedNode virtualCurrentNode = null;
-        int changes;
+        MyLinkedNode virtualCurrentNode = new MyLinkedNode();
+
+        int iteratorChangesCounter;
         int nextPositionIndex;
         boolean isNextCalled = false;
         boolean isPreviousCalled = false;
 
         public MyLinkedListIterator(){
-            changes = changesCounter;
+            iteratorChangesCounter = changesCounter;
             if (!isEmpty()) { virtualCurrentNode.setNext(first); }
             nextPositionIndex = 0;
         }
 
         private void throwModificationException (){
-            if (this.changes != changesCounter){
+            if (iteratorChangesCounter != changesCounter){
                 throw new ConcurrentModificationException();
             }
         }
@@ -67,7 +68,7 @@ public class MyLinkedList implements MyList {
         private void cleanNextAndPreviousCallsAndIncrementChangesCounter(){
             isNextCalled = false;
             isPreviousCalled = false;
-            changes++;
+            iteratorChangesCounter++;
             changesCounter++;
         }
 
@@ -86,7 +87,7 @@ public class MyLinkedList implements MyList {
                 nextPositionIndex++;
                 isNextCalled = true;
                 isPreviousCalled = false;
-                return virtualCurrentNode.getPrevious();
+                return virtualCurrentNode.getPrevious().getValue();
             }
         }
 
@@ -105,7 +106,7 @@ public class MyLinkedList implements MyList {
                 nextPositionIndex--;
                 isNextCalled = false;
                 isPreviousCalled = true;
-                return virtualCurrentNode.getNext();
+                return virtualCurrentNode.getNext().getValue();
             }
         }
 
@@ -125,19 +126,34 @@ public class MyLinkedList implements MyList {
                 throw new IllegalStateException();
             }
             if (isNextCalled){
-                MyLinkedNode newPrevious = virtualCurrentNode.getPrevious().getPrevious();
-                MyLinkedNode newNext = virtualCurrentNode.getNext();
-                newPrevious.setNext(newNext);
-                newNext.setPrevious(newPrevious);
-                virtualCurrentNode.setPrevious(newPrevious);
+                if (virtualCurrentNode.getNext() != null) {
+                    MyLinkedNode newNext = virtualCurrentNode.getNext();
+                    newNext.setPrevious(virtualCurrentNode.getPrevious().getPrevious());
+                }
+                if (virtualCurrentNode.getPrevious().getPrevious() != null) {
+                    MyLinkedNode newPrevious = virtualCurrentNode.getPrevious().getPrevious();
+                    newPrevious.setNext(virtualCurrentNode.getNext());
+                    virtualCurrentNode.setPrevious(newPrevious);
+                } else {
+                    virtualCurrentNode.setPrevious(null);
+                    first = virtualCurrentNode.getNext();
+                }
                 nextPositionIndex--;
                 cleanNextAndPreviousCallsAndIncrementChangesCounter();
             } else {
-                MyLinkedNode newPrevious = virtualCurrentNode.getPrevious();
-                MyLinkedNode newNext = virtualCurrentNode.getNext().getNext();
-                newPrevious.setNext(newNext);
-                newNext.setPrevious(newPrevious);
-                virtualCurrentNode.setNext(newNext);
+                if (virtualCurrentNode.getPrevious() != null) {
+                    MyLinkedNode newPrevious = virtualCurrentNode.getPrevious();
+                    newPrevious.setNext(virtualCurrentNode.getNext().getNext());
+                } else {
+                    first = virtualCurrentNode.getNext().getNext();
+                }
+                if (virtualCurrentNode.getNext().getNext() != null) {
+                    MyLinkedNode newNext = virtualCurrentNode.getNext().getNext();
+                    newNext.setPrevious(virtualCurrentNode.getPrevious());
+                    virtualCurrentNode.setNext(newNext);
+                } else {
+                    virtualCurrentNode.setNext(null);
+                }
                 cleanNextAndPreviousCallsAndIncrementChangesCounter();
             }
         }
@@ -159,15 +175,23 @@ public class MyLinkedList implements MyList {
             throwModificationException();
             if (isEmpty()) {
                 first = new MyLinkedNode(null, e, null);
-                virtualCurrentNode.setNext(first);
+                virtualCurrentNode.setPrevious(first);
+                nextPositionIndex++;
                 cleanNextAndPreviousCallsAndIncrementChangesCounter();
             } else {
                 MyLinkedNode newNode = new MyLinkedNode(virtualCurrentNode.getNext(), e, virtualCurrentNode.getPrevious());
-                MyLinkedNode nextNode = virtualCurrentNode.getNext();
-                MyLinkedNode previousNode = virtualCurrentNode.getPrevious();
-                nextNode.setPrevious(newNode);
-                previousNode.setNext(newNode);
-                virtualCurrentNode.setNext(newNode);
+                if (newNode.getNext() != null) {
+                    MyLinkedNode nextNode = virtualCurrentNode.getNext();
+                    nextNode.setPrevious(newNode);
+                }
+                if (newNode.getPrevious() != null) {
+                    MyLinkedNode previousNode = virtualCurrentNode.getPrevious();
+                    previousNode.setNext(newNode);
+                } else {
+                    first = newNode;
+                }
+                virtualCurrentNode.setPrevious(newNode);
+                nextPositionIndex++;
                 cleanNextAndPreviousCallsAndIncrementChangesCounter();
             }
         }
