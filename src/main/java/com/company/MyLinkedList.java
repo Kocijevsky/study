@@ -48,14 +48,16 @@ public class MyLinkedList implements MyList {
 
         MyLinkedNode virtualCurrentNode = new MyLinkedNode();
 
-        int iteratorChangesCounter;
-        int nextPositionIndex;
+        int iteratorChangesCounter = 0;
+        int nextPositionIndex = 0;
         boolean isNextCalled = false;
         boolean isPreviousCalled = false;
 
         public MyLinkedListIterator(){
             iteratorChangesCounter = changesCounter;
-            if (!isEmpty()) { virtualCurrentNode.setNext(first); }
+            if (!isEmpty()) {
+                virtualCurrentNode.setNext(first);
+            }
             nextPositionIndex = 0;
         }
 
@@ -112,12 +114,12 @@ public class MyLinkedList implements MyList {
 
         public int nextIndex() {
             throwModificationException();
-            return (nextPositionIndex);
+            return nextPositionIndex;
         }
 
         public int previousIndex() {
             throwModificationException();
-            return (nextPositionIndex - 1);
+            return nextPositionIndex - 1;
         }
 
         public void remove() { // ??? Может, нужно next и previous считать, и ремувить сразу кучу элементов?
