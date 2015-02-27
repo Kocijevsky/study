@@ -2,6 +2,8 @@ package com.company;
 
 import org.junit.Test;
 
+import java.util.ConcurrentModificationException;
+
 import static org.junit.Assert.*;
 
 public class MyLinkedListIteratorTest {
@@ -210,7 +212,7 @@ public class MyLinkedListIteratorTest {
     }
 
     @Test
-    public void testRemoveGenericElementWithNextCalled() {
+    public void testRemoveMiddleElementWithNextCalled() {
         MyLinkedList list = new MyLinkedList();
         list.add(intNumber);
         list.add(character);
@@ -280,7 +282,7 @@ public class MyLinkedListIteratorTest {
     }
 
     @Test
-    public void testRemoveGenericElementWithPreviousCalled() {
+    public void testRemoveMiddleElementWithPreviousCalled() {
         MyLinkedList list = new MyLinkedList();
         list.add(intNumber);
         list.add(character);
@@ -354,7 +356,7 @@ public class MyLinkedListIteratorTest {
     }
 
     @Test
-    public void testSetGenericElementWithNextCalled() {
+    public void testSetMiddleElementWithNextCalled() {
         MyLinkedList list = new MyLinkedList();
         list.add(intNumber);
         list.add(character);
@@ -419,7 +421,7 @@ public class MyLinkedListIteratorTest {
     }
 
     @Test
-    public void testSetGenericElementWithPreviousCalled() {
+    public void testSetMiddleElementWithPreviousCalled() {
         MyLinkedList list = new MyLinkedList();
         list.add(intNumber);
         list.add(character);
@@ -453,5 +455,112 @@ public class MyLinkedListIteratorTest {
         assertEquals(character, list.get(1));
         assertEquals(array, list.get(2));
         assertEquals(2, iterator.nextIndex());
+    }
+
+    @Test (expected = ConcurrentModificationException.class)
+    public void testConcurrentModificationException () {
+        MyLinkedList list = new MyLinkedList();
+        list.add(intNumber);
+        MyListIterator iterator = list.new MyLinkedListIterator();
+        list.add(character);
+        iterator.next();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testSetAfterNextAndRemoveCalled() {
+        MyLinkedList list = new MyLinkedList();
+        list.add(intNumber);
+        list.add(character);
+        list.add(string);
+        MyListIterator iterator = list.new MyLinkedListIterator();
+        iterator.next();
+        iterator.remove();
+        iterator.set(array);
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testSetAfterNextAndAddCalled() {
+        MyLinkedList list = new MyLinkedList();
+        list.add(intNumber);
+        list.add(character);
+        list.add(string);
+        MyListIterator iterator = list.new MyLinkedListIterator();
+        iterator.add(array);
+        iterator.set(array);
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testSetAfterPreviousAndRemoveCalled() {
+        MyLinkedList list = new MyLinkedList();
+        list.add(intNumber);
+        list.add(character);
+        list.add(string);
+        MyListIterator iterator = list.new MyLinkedListIterator();
+        iterator.next();
+        iterator.previous();
+        iterator.remove();
+        iterator.set(array);
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testSetAfterPreviousAndAddCalled() {
+        MyLinkedList list = new MyLinkedList();
+        list.add(intNumber);
+        list.add(character);
+        list.add(string);
+        MyListIterator iterator = list.new MyLinkedListIterator();
+        iterator.next();
+        iterator.previous();
+        iterator.add(array);
+        iterator.set(array);
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testRemoveAfterNextAndSetCalled() {
+        MyLinkedList list = new MyLinkedList();
+        list.add(intNumber);
+        list.add(character);
+        list.add(string);
+        MyListIterator iterator = list.new MyLinkedListIterator();
+        iterator.next();
+        iterator.set(array);
+        iterator.remove();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testRemoveAfterNextAndAddCalled() {
+        MyLinkedList list = new MyLinkedList();
+        list.add(intNumber);
+        list.add(character);
+        list.add(string);
+        MyListIterator iterator = list.new MyLinkedListIterator();
+        iterator.add(array);
+        iterator.remove();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testRemoveAfterPreviousAndSetCalled() {
+        MyLinkedList list = new MyLinkedList();
+        list.add(intNumber);
+        list.add(character);
+        list.add(string);
+        MyListIterator iterator = list.new MyLinkedListIterator();
+        iterator.next();
+        iterator.previous();
+        iterator.set(array);
+        iterator.remove();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testRemoveAfterPreviousAndAddCalled() {
+        MyLinkedList list = new MyLinkedList();
+        list.add(intNumber);
+        list.add(character);
+        list.add(string);
+        MyListIterator iterator = list.new MyLinkedListIterator();
+        iterator.next();
+        iterator.previous();
+        iterator.add(array);
+        iterator.remove();
     }
 }
