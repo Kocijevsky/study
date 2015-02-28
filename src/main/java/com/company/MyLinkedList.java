@@ -106,8 +106,8 @@ public class MyLinkedList implements MyList {
                 virtualCurrentNode.setNext(virtualCurrentNode.getPrevious());
                 virtualCurrentNode.setPrevious(virtualCurrentNode.getPrevious().getPrevious());
                 nextPositionIndex--;
-                isNextCalled = false;
                 isPreviousCalled = true;
+                isNextCalled = false;
                 return virtualCurrentNode.getNext().getValue();
             }
         }
