@@ -13,8 +13,9 @@ public class MyArrayList implements MyList {
         }
 
         @Override
-        public void remove() {
+        public Object remove() {
 
+            return null;
         }
 
         @Override

@@ -48,10 +48,9 @@ public class MyLinkedList implements MyList {
         }
     }
 
+    public class MyLinkedListIterator implements MyListIterator {
 
-    private class MyLinkedListIterator implements MyListIterator {
-
-        MyLinkedNode currentPlace = new MyLinkedNode(null, null, first);
+        MyLinkedNode cursorNode = new MyLinkedNode(null, null, first);
 
         // Звали вперед или назад?
         boolean siblingCalled = false;
@@ -68,74 +67,74 @@ public class MyLinkedList implements MyList {
 
         private void stepForward() {
 
-            if (currentPlace.getNext() == null) {
+            if (cursorNode.getNext() == null) {
                 throw new IndexOutOfBoundsException();
             }
 
-            MyLinkedNode next = currentPlace.getNext();
+            MyLinkedNode next = cursorNode.getNext();
 
-            currentPlace.setNext(next.getNext());
-            currentPlace.setPrev(next);
+            cursorNode.setNext(next.getNext());
+            cursorNode.setPrev(next);
 
             nextPosition++;
         }
 
         private void stepBack() {
 
-            if (currentPlace.getPrev() == null) {
+            if (cursorNode.getPrev() == null) {
                 throw new IndexOutOfBoundsException();
             }
 
-            MyLinkedNode prev = currentPlace.getPrev();
+            MyLinkedNode prev = cursorNode.getPrev();
 
-            currentPlace.setNext(prev);
-            currentPlace.setPrev(prev.getPrev());
+            cursorNode.setNext(prev);
+            cursorNode.setPrev(prev.getPrev());
 
             nextPosition--;
         }
 
         private Object removeNext() {
-            MyLinkedNode next = currentPlace.getNext();
-            MyLinkedNode prev = currentPlace.getPrev();
+            MyLinkedNode next = cursorNode.getNext();
+            MyLinkedNode prev = cursorNode.getPrev();
 
             MyLinkedNode newPrev = prev.getPrev();
 
-            currentPlace.setPrev(newPrev);
+            cursorNode.setPrev(newPrev);
             if(newPrev!=null){
                 newPrev.setNext(next);
             }
             next.setPrev(newPrev);
 
-            return next.getValue();
+            return prev.getValue();
         }
 
         private Object removePrev() {
-            MyLinkedNode next = currentPlace.getNext();
-            MyLinkedNode prev = currentPlace.getPrev();
+            MyLinkedNode next = cursorNode.getNext();
+            MyLinkedNode prev = cursorNode.getPrev();
 
             MyLinkedNode newNext = next.getNext();
 
-            currentPlace.setNext(newNext);
+            cursorNode.setNext(newNext);
             if(newNext!=null){
                 newNext.setPrev(prev);
             }
             prev.setNext(newNext);
 
             nextPosition--;
-            return prev.getValue();
+            return next.getValue();
         }
 
 
         @Override
         public boolean hasNext() {
             stopIfChanged();
-            return currentPlace.getNext() != null;
+            return cursorNode.getNext() != null;
         }
 
         @Override
         public boolean hasPrevious() {
             stopIfChanged();
-            return currentPlace.getPrev() != null;
+            return cursorNode.getPrev() != null;
         }
 
         @Override
@@ -150,7 +149,7 @@ public class MyLinkedList implements MyList {
             // Поэтому возвращать будем значение предыдущей ноды
             siblingCalled = true;
             isLastCalledNext = true;
-            return currentPlace.getPrev().getValue();
+            return cursorNode.getPrev().getValue();
         }
 
         @Override
@@ -159,7 +158,7 @@ public class MyLinkedList implements MyList {
             stepBack();
             siblingCalled = true;
             isLastCalledNext = false;
-            return currentPlace.getNext().getValue() != null;
+            return cursorNode.getNext().getValue() != null;
         }
 
 
@@ -191,7 +190,7 @@ public class MyLinkedList implements MyList {
 
         @Override
         public int nextIndex() {
-            if (currentPlace.getNext() == null) {
+            if (cursorNode.getNext() == null) {
                 throw new IndexOutOfBoundsException();
             }
             return nextPosition;
@@ -199,7 +198,7 @@ public class MyLinkedList implements MyList {
 
         @Override
         public int previousIndex() {
-            if (currentPlace.getPrev() == null) {
+            if (cursorNode.getPrev() == null) {
                 throw new IndexOutOfBoundsException();
             }
             return nextPosition - 1;
@@ -231,9 +230,9 @@ public class MyLinkedList implements MyList {
             // Т.е. 1, который стал предыдущим после next()
 
             if (isLastCalledNext) {
-                currentPlace.getPrev().setValue(o);
+                cursorNode.getPrev().setValue(o);
             } else {
-                currentPlace.getNext().setValue(o);
+                cursorNode.getNext().setValue(o);
             }
             // тут не уверен на 100%;
             // В общем случае на структуру не влияет вроде бы
@@ -244,15 +243,24 @@ public class MyLinkedList implements MyList {
         @Override
         public void add(Object o) {
             stopIfChanged();
-            MyLinkedNode next = currentPlace.getNext();
-            MyLinkedNode prev = currentPlace.getPrev();
+            MyLinkedNode next = cursorNode.getNext();
+            MyLinkedNode prev = cursorNode.getPrev();
 
             MyLinkedNode newNode = new MyLinkedNode(o,prev,next);
 
-            next.setPrev(newNode);
-            prev.setNext(newNode);
+            if (prev!=null)
+            {
+                prev.setNext(newNode);
+            }
+            if (next!=null)
+            {
+                next.setPrev(newNode);
+            }
+            cursorNode.setPrev(newNode);
 
-            currentPlace.setPrev(newNode);
+            if(isEmpty()){
+                first = newNode;
+            }
 
             siblingCalled = false;
             listChanges++;
@@ -260,8 +268,7 @@ public class MyLinkedList implements MyList {
         }
     }
 
-
-    public MyIterator iterator() {
+    public MyListIterator iterator() {
         return new MyLinkedListIterator();
     }
 
