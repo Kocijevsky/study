@@ -122,7 +122,7 @@ public class MyLinkedList implements MyList {
             return nextPositionIndex - 1;
         }
 
-        public void remove() { // ??? Может, нужно next и previous считать, и ремувить сразу кучу элементов?
+        public void remove() {
             throwModificationException();
             if (!isNextCalled && !isPreviousCalled){
                 throw new IllegalStateException();
@@ -166,10 +166,10 @@ public class MyLinkedList implements MyList {
                 throw new IllegalStateException();
             } if (isNextCalled){
                 virtualCurrentNode.getPrevious().setValue(e);
-                cleanNextAndPreviousCallsAndIncrementChangesCounter();
+                changesCounter++;
             } else {
                 virtualCurrentNode.getNext().setValue(e);
-                cleanNextAndPreviousCallsAndIncrementChangesCounter();
+                changesCounter++;
             }
         }
 

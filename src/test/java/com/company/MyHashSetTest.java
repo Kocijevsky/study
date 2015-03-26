@@ -18,6 +18,7 @@ public class MyHashSetTest {
         assertEquals(0, secondString.hashCode());
         assertEquals(1611065785, thirdString.hashCode());
         assertEquals(16, firstNumber.hashCode());
+        assertEquals(32, secondNumber.hashCode());
     }
 
     @Test
@@ -26,43 +27,25 @@ public class MyHashSetTest {
         assertTrue(testSet.add(firstString));
         assertTrue(testSet.add(thirdString));
         assertTrue(testSet.add(firstNumber));
+        assertTrue(testSet.add(secondNumber));
     }
 
     @Test
     public void testAddDifferentObjectSameHash(){
         MyHashSet testSet = new MyHashSet();
         assertTrue(testSet.add(firstString));
-        assertFalse(testSet.add(secondString));
-    }
-
-    @Test
-    public void testAddSameObject(){
-        MyHashSet testSet = new MyHashSet();
-        assertTrue(testSet.add(firstString));
         assertFalse(testSet.add(firstString));
+        assertFalse(testSet.add(secondString));
     }
 
     @Test
     public void testAddManyElements() {
         MyHashSet testSet = new MyHashSet();
-        testSet.add(1);
-        testSet.add(2);
-        testSet.add(3);
-        testSet.add(4);
-        testSet.add(5);
-        testSet.add(6);
-        testSet.add(7);
-        testSet.add(8);
-        testSet.add(9);
-        testSet.add(10);
-        testSet.add(11);
-        testSet.add(12);
-        testSet.add(13);
-        testSet.add(14);
-        testSet.add(15);
-        testSet.add(16);
-        testSet.add(17);
-        assertEquals(17, testSet.size());
+        for (int i = 0; i < 18; i++){
+            testSet.add(i);
+            assertTrue(testSet.contains(i));
+            assertEquals(i + 1, testSet.size());
+        }
     }
 
     @Test
@@ -76,9 +59,9 @@ public class MyHashSetTest {
         MyHashSet testSet = new MyHashSet();
         testSet.add(firstString);
         assertEquals(1, testSet.size());
-        testSet.add(secondString);
+        testSet.add(secondString); //cannot be added - the same hash
         assertEquals(1, testSet.size());
-        testSet.add(firstNumber);
+        testSet.add(thirdString);
         assertEquals(2, testSet.size());
     }
 
@@ -122,20 +105,16 @@ public class MyHashSetTest {
     }
 
     @Test
-    public void testContainsForEmptySet() {
-        MyHashSet testSet = new MyHashSet();
-        assertFalse(testSet.contains(firstString));
-    }
-
-    @Test
     public void testContainsForAContainedObject() {
         MyHashSet testSet = new MyHashSet();
         testSet.add(firstString);
         testSet.add(thirdString);
         testSet.add(firstNumber);
+        testSet.add(secondNumber);
         assertTrue(testSet.contains(firstString));
         assertTrue(testSet.contains(thirdString));
         assertTrue(testSet.contains(firstNumber));
+        assertTrue(testSet.contains(secondNumber));
     }
 
     @Test
@@ -154,20 +133,24 @@ public class MyHashSetTest {
         testSet.add(firstString);
         assertFalse(testSet.contains(secondString));
     }
-    
-    @Test
-    public void testRemoveFromEmptySet() {
-        MyHashSet testSet = new MyHashSet();
-        assertFalse(testSet.remove(secondString));
-    }
 
     @Test
-    public void testRemoveNonContainedObject(){
+    public void testContainsForRemovedObjects() {
         MyHashSet testSet = new MyHashSet();
         testSet.add(firstString);
-        assertFalse(testSet.remove(secondString));
+        testSet.add(thirdString);
+        testSet.add(firstNumber);
+        testSet.add(secondNumber);
+        testSet.remove(firstString);
+        assertFalse(testSet.contains(firstString));
+        testSet.remove(thirdString);
+        assertFalse(testSet.contains(thirdString));
+        testSet.remove(firstNumber);
+        assertFalse(testSet.contains(firstNumber));
+        testSet.remove(secondNumber);
+        assertFalse(testSet.contains(secondNumber));
     }
-
+    
     @Test
     public void testRemoveObjectFromTheBottomOfBucket() {
         MyHashSet testSet = new MyHashSet();
@@ -208,5 +191,27 @@ public class MyHashSetTest {
         assertTrue(testSet.contains(firstNumber));
         assertFalse(testSet.contains(secondNumber));
         assertEquals(2, testSet.size());
+    }
+
+    @Test
+    public void testRemoveFromBucketWithNotZeroHash(){
+        MyHashSet testSet = new MyHashSet();
+        testSet.add(thirdString);
+        testSet.remove(thirdString);
+        assertFalse(testSet.contains(thirdString));
+        assertEquals(0, testSet.size());
+    }
+
+    @Test
+    public void testRemoveFromEmptySet() {
+        MyHashSet testSet = new MyHashSet();
+        assertFalse(testSet.remove(secondString));
+    }
+
+    @Test
+    public void testRemoveNonContainedObject(){
+        MyHashSet testSet = new MyHashSet();
+        testSet.add(firstString);
+        assertFalse(testSet.remove(secondString));
     }
 }
