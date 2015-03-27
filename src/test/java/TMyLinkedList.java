@@ -1,17 +1,14 @@
 import com.company.MyArrayList;
 import com.company.MyLinkedList;
 import com.company.MyList;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
-public class TMyArrayList extends TMyList {
+public class TMyLinkedList extends TMyList {
 
-    private MyArrayList theList;
+    private MyLinkedList theList;
 
     @Override
     public void setUp() {
-        theList = new MyArrayList();
+        theList = new MyLinkedList();
     }
 
     @Override
