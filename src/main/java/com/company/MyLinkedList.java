@@ -1,7 +1,6 @@
 package com.company;
 
 import java.util.ConcurrentModificationException;
-import java.util.concurrent.RejectedExecutionException;
 
 public class MyLinkedList implements MyList {
 
@@ -43,12 +42,12 @@ public class MyLinkedList implements MyList {
             this.next = next;
         }
 
-        public void setPrev(MyLinkedNode next) {
-            this.next = next;
+        public void setPrev(MyLinkedNode prev) {
+            this.prev = prev;
         }
     }
 
-    public class MyLinkedListIterator implements MyListIterator {
+    private class MyLinkedListIterator implements MyListIterator {
 
         MyLinkedNode cursorNode = new MyLinkedNode(null, null, first);
 
@@ -61,7 +60,7 @@ public class MyLinkedList implements MyList {
 
         private void stopIfChanged() {
             if (localChanges != listChanges) {
-                throw new RejectedExecutionException();
+                throw new ConcurrentModificationException();
             }
         }
 
@@ -97,31 +96,45 @@ public class MyLinkedList implements MyList {
             MyLinkedNode next = cursorNode.getNext();
             MyLinkedNode prev = cursorNode.getPrev();
 
+            Object value = prev.getValue();
+
             MyLinkedNode newPrev = prev.getPrev();
 
             cursorNode.setPrev(newPrev);
-            if(newPrev!=null){
+            if (newPrev != null) {
                 newPrev.setNext(next);
             }
-            next.setPrev(newPrev);
+            if (next != null) {
+                next.setPrev(newPrev);
+            }
+            if(nextPosition == 1){
+                first = next;
+            }
 
-            return prev.getValue();
+            nextPosition--;
+            return value;
         }
 
         private Object removePrev() {
             MyLinkedNode next = cursorNode.getNext();
             MyLinkedNode prev = cursorNode.getPrev();
 
+            Object value = next.getValue();
+
             MyLinkedNode newNext = next.getNext();
 
             cursorNode.setNext(newNext);
-            if(newNext!=null){
+            if (newNext != null) {
                 newNext.setPrev(prev);
             }
-            prev.setNext(newNext);
+            if (prev != null) {
+                prev.setNext(newNext);
+            }
+            if(nextPosition == 0){
+                first = newNext;
+            }
 
-            nextPosition--;
-            return next.getValue();
+            return value;
         }
 
 
@@ -158,7 +171,7 @@ public class MyLinkedList implements MyList {
             stepBack();
             siblingCalled = true;
             isLastCalledNext = false;
-            return cursorNode.getNext().getValue() != null;
+            return cursorNode.getNext().getValue();
         }
 
 
@@ -167,7 +180,7 @@ public class MyLinkedList implements MyList {
             stopIfChanged();
 
             if (!siblingCalled) {
-                throw new ConcurrentModificationException();
+                throw new IllegalStateException();
             }
 
             Object removedObj;
@@ -190,17 +203,11 @@ public class MyLinkedList implements MyList {
 
         @Override
         public int nextIndex() {
-            if (cursorNode.getNext() == null) {
-                throw new IndexOutOfBoundsException();
-            }
             return nextPosition;
         }
 
         @Override
         public int previousIndex() {
-            if (cursorNode.getPrev() == null) {
-                throw new IndexOutOfBoundsException();
-            }
             return nextPosition - 1;
         }
 
@@ -209,7 +216,7 @@ public class MyLinkedList implements MyList {
             stopIfChanged();
 
             if (!siblingCalled) {
-                throw new ConcurrentModificationException();
+                throw new IllegalStateException();
             }
 
             // Адовато с прев и некст
@@ -243,26 +250,25 @@ public class MyLinkedList implements MyList {
         @Override
         public void add(Object o) {
             stopIfChanged();
+
             MyLinkedNode next = cursorNode.getNext();
             MyLinkedNode prev = cursorNode.getPrev();
 
-            MyLinkedNode newNode = new MyLinkedNode(o,prev,next);
+            MyLinkedNode newNode = new MyLinkedNode(o, prev, next);
 
-            if (prev!=null)
-            {
+            if (prev == null) {
+                first = newNode;
+            } else {
                 prev.setNext(newNode);
             }
-            if (next!=null)
-            {
+
+            if (next != null) {
                 next.setPrev(newNode);
             }
             cursorNode.setPrev(newNode);
 
-            if(isEmpty()){
-                first = newNode;
-            }
-
             siblingCalled = false;
+            nextPosition++;
             listChanges++;
             localChanges++;
         }

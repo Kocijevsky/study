@@ -1,26 +1,87 @@
 package com.company;
 
+import java.util.ConcurrentModificationException;
+
 public class MyArrayList implements MyList {
 
+    private int numberOfChanges = 0;
     private int internalSize = 0;
     private Object[] elements = new Object[16];
 
+
     private class MyArrayListIterator implements MyIterator {
+
+        private int localChanges;
+        private int nextPosition;
+        private boolean siblingCalled;
+        private boolean isLastCalledNext;
+
+        MyArrayListIterator() {
+            siblingCalled = false;
+            isLastCalledNext = false;
+            localChanges = numberOfChanges;
+            nextPosition = 0;
+        }
+
+        private void stopIfChanged() {
+            if (localChanges != numberOfChanges) {
+                throw new ConcurrentModificationException();
+            }
+        }
 
         @Override
         public boolean hasNext() {
-            return false;
+            stopIfChanged();
+            return nextPosition < internalSize;
+        }
+
+        public boolean hasPrevious() {
+            stopIfChanged();
+            return nextPosition > 0;
         }
 
         @Override
         public Object remove() {
+            stopIfChanged();
+            int indexToRemove;
 
-            return null;
+            if (!siblingCalled) {
+                throw new IllegalStateException();
+            }
+            if (isLastCalledNext) {
+                indexToRemove = nextPosition - 1;
+            } else {
+                indexToRemove = nextPosition;
+            }
+
+            return MyArrayList.this.remove(indexToRemove);
         }
 
         @Override
         public Object next() {
-            return null;
+            stopIfChanged();
+            if (nextPosition < internalSize) {
+                nextPosition++;
+                siblingCalled = true;
+                isLastCalledNext = true;
+
+                return elements[nextPosition - 1];
+            } else {
+                throw new IndexOutOfBoundsException();
+            }
+        }
+
+        public Object previous() {
+            stopIfChanged();
+            if (nextPosition - 1 >= 0) {
+                nextPosition--;
+                siblingCalled = true;
+                isLastCalledNext = false;
+
+                return elements[nextPosition];
+            } else {
+                throw new IndexOutOfBoundsException();
+            }
         }
     }
 
@@ -32,14 +93,11 @@ public class MyArrayList implements MyList {
 
     public void add(Object o) {
 
-        if (elements.length == internalSize) {
-            Object[] newElements = new Object[elements.length * 2];
-            System.arraycopy(elements, 0, newElements, 0, elements.length);
-            elements = newElements;
-        }
+        enlargeIfBig();
 
         elements[internalSize] = o;
         internalSize++;
+        numberOfChanges++;
     }
 
     public int indexOf(Object o) {
@@ -52,8 +110,13 @@ public class MyArrayList implements MyList {
     }
 
     @Override
-    public void insert(int i, Object o) {
+    public void insert(int index, Object o) {
+        enlargeIfBig();
+        System.arraycopy(elements, index, elements, index + 1, elements.length - (index + 1));
+        elements[index] = o;
 
+        internalSize++;
+        numberOfChanges++;
     }
 
     public int size() {
@@ -65,8 +128,8 @@ public class MyArrayList implements MyList {
     }
 
     @Override
-    public void put(int i, Object o) {
-
+    public void put(int index, Object o) {
+        elements[index] = o;
     }
 
     public Object get(int i) {
@@ -82,7 +145,9 @@ public class MyArrayList implements MyList {
         }
         removedObject = elements[internalSize - 1];
         elements[internalSize - 1] = null;
+
         internalSize--;
+        numberOfChanges++;
 
         return removedObject;
     }
@@ -107,6 +172,14 @@ public class MyArrayList implements MyList {
         }
 
         return string;
+    }
+
+    private void enlargeIfBig() {
+        if (elements.length >= internalSize - 1) {
+            Object[] newElements = new Object[elements.length * 2];
+            System.arraycopy(elements, 0, newElements, 0, elements.length);
+            elements = newElements;
+        }
     }
 
 
