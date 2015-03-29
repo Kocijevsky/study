@@ -9,7 +9,7 @@ public class MyArrayList implements MyList {
     private Object[] elements = new Object[16];
 
 
-    private class MyArrayListIterator implements MyIterator {
+    private class MyArrayListIterator implements MyListIterator {
 
         private int localChanges;
         private int nextPosition;
@@ -53,8 +53,23 @@ public class MyArrayList implements MyList {
             } else {
                 indexToRemove = nextPosition;
             }
+            localChanges++;
 
             return MyArrayList.this.remove(indexToRemove);
+        }
+
+        @Override
+        public void set(Object e) {
+            stopIfChanged();
+            MyArrayList.this.put(nextPosition - 1, e);
+            localChanges++;
+        }
+
+        @Override
+        public void add(Object e) {
+            stopIfChanged();
+            MyArrayList.this.insert(nextPosition - 1, e);
+            localChanges++;
         }
 
         @Override
@@ -82,6 +97,16 @@ public class MyArrayList implements MyList {
             } else {
                 throw new IndexOutOfBoundsException();
             }
+        }
+
+        @Override
+        public int nextIndex() {
+            return nextPosition;
+        }
+
+        @Override
+        public int previousIndex() {
+            return nextPosition-1;
         }
     }
 
@@ -130,6 +155,7 @@ public class MyArrayList implements MyList {
     @Override
     public void put(int index, Object o) {
         elements[index] = o;
+        numberOfChanges++;
     }
 
     public Object get(int i) {
@@ -155,6 +181,7 @@ public class MyArrayList implements MyList {
     public void clear() {
         elements = new Object[16];
         internalSize = 0;
+        numberOfChanges++;
     }
 
     public boolean contains(Object o) {
