@@ -1,14 +1,108 @@
 package com.company;
 
+import java.util.ConcurrentModificationException;
+import java.util.NoSuchElementException;
+
 /**
  * Created by Катя on 01.03.2015.
  */
 public class MyHashSet implements MyCollection {
 
+    private int collectionChangesCounter = 0;
     private int numberOfElements = 0;
     private int setCapacity = 16;
     private float loadFactor = (float) 0.75; // ??? что за дела?
     private MyLinkedNode[] hashSetArray = new MyLinkedNode[setCapacity];
+
+    public class MyHashSetIterator implements MyIterator{
+
+        private int iteratorChangesCounter;
+        private int nextPositionIndex;
+        private int currentBucketPosition = 0;
+        private MyLinkedNode iteratorCurrentNode = new MyLinkedNode();
+        private boolean isNextCalled = false;
+
+        public MyHashSetIterator (){
+            iteratorChangesCounter = collectionChangesCounter;
+            nextPositionIndex = 0;
+            if (!isEmpty()){
+                findNextNonEmptyBucket();
+                iteratorCurrentNode.setNext(MyHashSet.this.hashSetArray[currentBucketPosition]);
+            }
+        }
+
+        private void findNextNonEmptyBucket(){
+            while ((MyHashSet.this.hashSetArray[currentBucketPosition] == null) && (currentBucketPosition < setCapacity)){
+                currentBucketPosition++;
+            }
+        }
+
+        private void checkForModification(){
+            if (iteratorChangesCounter != collectionChangesCounter){
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        public boolean hasNext() {
+
+            checkForModification();
+
+            return (nextPositionIndex < MyHashSet.this.size());
+        }
+
+        public Object next() {
+
+            checkForModification();
+
+            if (nextPositionIndex == MyHashSet.this.size()){
+                throw new NoSuchElementException();
+            }
+
+            Object objectToReturn;
+
+            if (iteratorCurrentNode.getNext() != null){ //Check if we have something left in the current bucket
+                objectToReturn = iteratorCurrentNode.getNext().getValue();
+                iteratorCurrentNode.setPrevious(iteratorCurrentNode.getNext());
+                iteratorCurrentNode.setNext(iteratorCurrentNode.getNext().getNext());
+                isNextCalled = true;
+                nextPositionIndex++;
+                return objectToReturn;
+            } else { //Jump to the next bucket
+                findNextNonEmptyBucket();
+                MyLinkedNode firstNodeFromNextBucket = MyHashSet.this.hashSetArray[currentBucketPosition];
+                objectToReturn = firstNodeFromNextBucket.getValue();
+                iteratorCurrentNode.setPrevious(firstNodeFromNextBucket);
+                iteratorCurrentNode.setNext(firstNodeFromNextBucket.getNext());
+                isNextCalled = true;
+                nextPositionIndex++;
+                return objectToReturn;
+            }
+        }
+
+        @Override
+        public void remove() {
+            checkForModification();
+
+            if (!isNextCalled){
+                throw new IllegalStateException();
+            }
+
+            if (iteratorCurrentNode.getPrevious() != null){
+                iteratorCurrentNode.getPrevious().setNext(iteratorCurrentNode.getNext());
+            }
+            if (iteratorCurrentNode.getNext() != null){
+                iteratorCurrentNode.getNext().setPrevious(iteratorCurrentNode.getPrevious().getPrevious());
+            }
+
+            iteratorCurrentNode.setPrevious(iteratorCurrentNode.getPrevious().getPrevious());
+            nextPositionIndex--;
+            numberOfElements--;
+            isNextCalled = false;
+            iteratorChangesCounter++;
+            collectionChangesCounter++;
+        }
+    }
+
 
     private class MyLinkedNode {
 
@@ -62,6 +156,7 @@ public class MyHashSet implements MyCollection {
         setCapacity = setCapacity * 2;
     }
 
+    @Override
     public boolean add(Object o){
         if (containsHashOf(o)){
             return false;
@@ -76,6 +171,7 @@ public class MyHashSet implements MyCollection {
 
         if (hashSetArray[bucketNumber] == null) {
             hashSetArray[bucketNumber] = new MyLinkedNode (null, o, null);
+            collectionChangesCounter++;
             numberOfElements ++;
             return true;
         } else {
@@ -85,6 +181,7 @@ public class MyHashSet implements MyCollection {
             }
             MyLinkedNode newNode = new MyLinkedNode(null, o, currentNode);
             currentNode.setNext(newNode);
+            collectionChangesCounter++;
             numberOfElements ++;
             return true;
         }
@@ -110,6 +207,10 @@ public class MyHashSet implements MyCollection {
         return false;
     }
 
+    public MyIterator iterator() {
+        return new MyHashSetIterator();
+    }
+
     private boolean containsHashOf (Object o) {
         int hashBucket = o.hashCode() % setCapacity;
         MyLinkedNode searchNode = hashSetArray[hashBucket];
@@ -120,11 +221,6 @@ public class MyHashSet implements MyCollection {
             searchNode = searchNode.getNext();
         }
         return false;
-    }
-
-    @Override
-    public MyIterator iterator() {
-        return null;
     }
 
     public boolean remove(Object o) {
@@ -144,6 +240,7 @@ public class MyHashSet implements MyCollection {
                 } else {
                     hashSetArray[hashBucket] = null;
                 }
+                collectionChangesCounter++;
                 numberOfElements--;
                 return true;
             }

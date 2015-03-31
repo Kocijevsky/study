@@ -5,7 +5,7 @@ package com.company;
  */
 public interface MyList extends MyCollection {
 
-    public void add(Object o);
+    public boolean add(Object o);
 
     public Object get(int i);
 

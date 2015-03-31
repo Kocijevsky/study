@@ -322,7 +322,7 @@ public class MyLinkedListTest {
         testList.add(character);
         testList.add(string);
         testList.add(array);
-        assertEquals(0, testList.indexOf(intNumber)); // ??? непонятно, почему этот тест валится =( TODO
+        assertEquals(0, testList.indexOf(intNumber));
         assertEquals(1, testList.indexOf(character));
         assertEquals(2, testList.indexOf(string));
         assertEquals(3, testList.indexOf(array));

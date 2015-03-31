@@ -1,59 +1,29 @@
 package com.company;
 
-import org.junit.Before;
-import org.junit.Test;
-
 /**
  * Created by Катя on 26.03.2015.
  */
-public class MyArrayListIteratorTest extends MyLinkedListIteratorTest {
+public class MyArrayListIteratorTest extends MyListIteratorTest {
 
-    Integer intNumber = 156;
-    Character character = 'a';
-    String string = "Hello";
-    int[] array = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    private MyArrayList arrayList;
 
-    MyArrayList emptyList;
-    MyArrayList nonEmptyList;
-    MyListIterator emptyListIterator;
-    MyListIterator nonEmptyListIterator;
+    private MyArrayList.MyArrayListIterator arrayListIterator;
 
-    @Before
-    public void initializeEmptyList() {
-        emptyList = new MyArrayList();
-    }
-
-    @Before
-    public void initializeNonEmptyList() {
-        nonEmptyList = new MyArrayList();
-        nonEmptyList.add(intNumber);
-        nonEmptyList.add(character);
-        nonEmptyList.add(string);
-        nonEmptyList.add(array);
+    @Override
+    public void createList() {
+        arrayList = new MyArrayList();
     }
 
     @Override
-    protected void createEmptyListIterator() {
-        emptyListIterator = emptyList.new MyArrayListIterator();
+    public MyList getList() {
+        return arrayList;
     }
 
     @Override
-    protected void createNonEmptyListIterator() {
-        nonEmptyListIterator = nonEmptyList.new MyArrayListIterator();
+    public MyListIterator getListIterator() {
+        arrayListIterator = arrayList.new MyArrayListIterator();
+        return arrayListIterator;
     }
 
-    @Test
-    public void testAddToEmptyList() {
-        super.testAddToEmptyList();
-    }
 
-    @Test
-    public void testAddFirstElementToNonEmptyList() {
-        super.testAddFirstElementToNonEmptyList();
-    }
-
-    @Test
-    public void testAddMiddleElementToNonEmptyList() {
-        super.testAddMiddleElementToNonEmptyList();
-    }
 }

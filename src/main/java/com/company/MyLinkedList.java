@@ -1,6 +1,7 @@
 package com.company;
 
 import java.util.ConcurrentModificationException;
+import java.util.NoSuchElementException;
 
 public class MyLinkedList implements MyList {
 
@@ -82,7 +83,7 @@ public class MyLinkedList implements MyList {
         public Object next() {
             throwModificationException();
             if (virtualCurrentNode.getNext() == null){
-                throw new IndexOutOfBoundsException();
+                throw new NoSuchElementException();
             } else {
                 virtualCurrentNode.setPrevious(virtualCurrentNode.getNext());
                 virtualCurrentNode.setNext(virtualCurrentNode.getNext().getNext());
@@ -101,7 +102,7 @@ public class MyLinkedList implements MyList {
         public Object previous() {
             throwModificationException();
             if (virtualCurrentNode.getPrevious() == null){
-                throw new IndexOutOfBoundsException();
+                throw new NoSuchElementException();
             } else {
                 virtualCurrentNode.setNext(virtualCurrentNode.getPrevious());
                 virtualCurrentNode.setPrevious(virtualCurrentNode.getPrevious().getPrevious());
@@ -167,9 +168,11 @@ public class MyLinkedList implements MyList {
             } if (isNextCalled){
                 virtualCurrentNode.getPrevious().setValue(e);
                 changesCounter++;
+                iteratorChangesCounter++;
             } else {
                 virtualCurrentNode.getNext().setValue(e);
                 changesCounter++;
+                iteratorChangesCounter++;
             }
         }
 
@@ -226,7 +229,7 @@ public class MyLinkedList implements MyList {
         return search;
     }
 
-    public void add(Object o) {
+    public boolean add(Object o) {
         if (isEmpty()) {
             first = new MyLinkedNode(null, o, null);
         } else {
@@ -238,6 +241,7 @@ public class MyLinkedList implements MyList {
             search.setNext(new MyLinkedNode(null, o, search));
         }
         changesCounter++;
+        return true;
     }
 
     public Object get(int index) {

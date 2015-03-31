@@ -11,8 +11,8 @@ public class MyArrayList implements MyList {
 
     public class MyArrayListIterator implements MyListIterator{
 
-        private int iteratorChangesCounter = 0;
-        private int nextPositionIndex = 0;
+        private int iteratorChangesCounter;
+        private int nextPositionIndex;
         private boolean isNextCalled = false;
         private boolean isPreviousCalled = false;
 
@@ -29,7 +29,7 @@ public class MyArrayList implements MyList {
 
         public boolean hasNext() {
             checkForModification();
-            return (size() - 1) > nextPositionIndex;
+            return (size()) > nextPositionIndex;
         }
 
         public Object next() {
@@ -107,7 +107,7 @@ public class MyArrayList implements MyList {
 
         public void add(Object e) {
             checkForModification();
-            MyArrayList.this.insert(nextPositionIndex - 1, e);
+            MyArrayList.this.insert(nextPositionIndex, e);
             nextPositionIndex++;
             iteratorChangesCounter++;
             isNextCalled = isPreviousCalled = false;
@@ -120,7 +120,7 @@ public class MyArrayList implements MyList {
         elements = newElements;
     }
 
-    public void add(Object o) {
+    public boolean add(Object o) {
 
         if (elements.length == internalSize) {
             increaseArraySize();
@@ -129,6 +129,7 @@ public class MyArrayList implements MyList {
         elements[internalSize] = o;
         changesCounter++;
         internalSize++;
+        return true;
     }
 
     public void insert(int i, Object o) {
@@ -140,6 +141,7 @@ public class MyArrayList implements MyList {
         System.arraycopy(elements, i, elements, i + 1, internalSize - i);
         changesCounter++;
         elements[i] = o;
+        internalSize++;
     }
 
     @Override
